@@ -1,0 +1,54 @@
+import pandas as pd
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+titanic = pd.read_csv(r"C:\Users\talon\Downloads\train.csv")
+mpl.rcParams['font.size'] = 4
+print(titanic.Survived.describe(),
+titanic.Pclass.describe(),
+titanic.Sex.describe(),
+titanic.Age.describe(),
+titanic.SibSp.describe(),
+titanic.Parch.describe(),
+titanic.Fare.describe(),
+sep = '\n\n')
+
+rng = np.random.default_rng()
+random_ages = pd.Series(rng.integers(titanic.Age.min(), titanic.Age.max(), size=len(titanic.Age.isna())))
+titanic.Age.fillna(random_ages)
+# fill na ages with random ages to avoid messing up a particular age group
+plt.figure()
+plt.subplot(131)
+sex_data = titanic.groupby('Sex').Survived.sum()/titanic.groupby('Sex').Survived.count()
+plt.bar(sex_data.index,sex_data.values, label='Survival rate by Sex')
+# survival rate by sex
+plt.subplot(132)
+Pclass_data = titanic.groupby('Pclass').Survived.sum()/titanic.groupby('Pclass').Survived.count()
+plt.bar(Pclass_data.index, Pclass_data.values, label='Survival rate by passenger class')
+# survival rate by Pclass
+plt.subplot(133)
+bins = [0, 6, 12, 19, 36, 55, 100]
+labels = ['Baby','Child', 'Teenager', 'Young Adult','Adult', 'Senior']
+titanic['Age_Group'] = pd.cut(titanic['Age'], bins=bins, labels=labels)
+Age_Group_data = titanic.groupby('Age_Group').Survived.sum()/titanic.groupby('Age_Group').Survived.count()
+plt.bar(Age_Group_data.index, Age_Group_data.values, label='Survival rate by age')
+plt.show()
+# survival rate by age group
+
+titanic['FamilySize'] = titanic['SibSp'] + titanic['Parch'] + 1
+def alone(row):
+    return row.FamilySize == 1
+titanic['IsAlone'] = titanic.apply(alone, axis = 'columns')
+def title(row):
+    return row.Name[row.Name.index(',')+2:row.Name.index('.')]
+titanic['Title'] = titanic.apply(title, axis = 'columns')
+plt.figure()
+plt.subplot(121)
+FamilySize_data = titanic.groupby('FamilySize').Survived.sum()/titanic.groupby('FamilySize').Survived.count()
+plt.plot(FamilySize_data.index, FamilySize_data.values, label='Survival rate by Family Size', markevery =1)
+# survival rate by family size
+plt.subplot(122)
+Title_data = titanic.groupby('Title').Survived.sum()/titanic.groupby('Title').Survived.count()
+plt.bar(Title_data.index, Title_data.values, label='Survival rate by Title')
+# plot survival rate by title
+plt.show()
